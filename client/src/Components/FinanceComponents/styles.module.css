@@ -1,0 +1,8 @@
+.savingGoalslayout {
+  display: grid;
+  gap: 1rem;
+  place-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(385px, 1fr));
+  margin-top: 3rem;
+  padding-bottom: 3rem;
+}

@@ -6,11 +6,11 @@ const RouteChecker = ({ children }) => {
   const { isSignedIn } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isSignedIn) {
-      navigate("/signin", { replace: true });
-    }
-  }, [navigate, isSignedIn]);
+  // useEffect(() => {
+  //   if (!isSignedIn) {
+  //     navigate("/signin", { replace: true });
+  //   }
+  // }, [navigate, isSignedIn]);
 
   return children;
 };
