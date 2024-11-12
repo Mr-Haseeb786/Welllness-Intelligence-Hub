@@ -4,6 +4,7 @@ import SignUpPage from "../Pages/SignUpPage";
 import FinanceTracker from "../Pages/FinanceTracker";
 import RouteChecker from "./RouteChecker";
 import PublicRoutes from "./PublicRoutes";
+import InputForm from "../Pages/InputForm";
 
 export const router = createBrowserRouter([
   {
@@ -18,5 +19,8 @@ export const router = createBrowserRouter([
     path: "/signin",
     element: <PublicRoutes children={<LoginPage />} />,
   },
-  {},
+  {
+    path: "/finance-tracker/edit-info",
+    element: <RouteChecker children={<InputForm />} />,
+  },
 ]);

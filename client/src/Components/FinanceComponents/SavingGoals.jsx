@@ -9,7 +9,6 @@ import {
   Tooltip,
   Legend,
   Title,
-  defaults,
 } from "chart.js/auto";
 import { Doughnut } from "react-chartjs-2";
 

@@ -4,7 +4,7 @@ import HeadInfo from "./FinanceComponents/HeadInfo";
 import ExpenseDetails from "./FinanceComponents/ExpenseDetails";
 import SavingGoals from "./FinanceComponents/SavingGoals";
 
-const Sidebar = () => {
+const Sidebar = ({ children }) => {
   return (
     <div className="drawer md:hidden">
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
@@ -58,11 +58,7 @@ const Sidebar = () => {
           </div>
         </div>
         {/* Page content here */}
-        <div className="max-w-7xl w-11/12 mx-auto">
-          <HeadInfo />
-          <ExpenseDetails />
-          <SavingGoals />
-        </div>
+        <div className="max-w-7xl w-11/12 mx-auto">{children}</div>
       </div>
       <div className="drawer-side">
         <label
@@ -73,10 +69,22 @@ const Sidebar = () => {
         <ul className="menu bg-base-200 text-base-content min-h-full w-80 p-4">
           {/* Sidebar content here */}
           <li>
-            <Link to={"/signin"}>Test</Link>
+            <h2 className="font-bold font-heading text-xl">Finance Tracker</h2>
+          </li>
+          <li className="pl-4 font-body">
+            <Link to={"/"}>Home</Link>
+          </li>
+          <li className="pl-4 font-body">
+            <Link to={"/"}>Edit Info</Link>
           </li>
           <li>
-            <a>Sidebar Item 2</a>
+            <h2 className="font-bold font-heading text-xl">Health Tracker</h2>
+          </li>
+          <li className="pl-4 font-body">
+            <Link to={"/"}>Home</Link>
+          </li>
+          <li className="pl-4 font-body">
+            <Link to={"/"}>Edit Info</Link>
           </li>
         </ul>
       </div>
