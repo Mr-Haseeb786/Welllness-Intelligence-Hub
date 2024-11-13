@@ -1,6 +1,52 @@
-import React from "react";
+import React, { useState } from "react";
+import Popup from "../Popup";
+
+const PopupContent = ({ closePopup }) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    closePopup();
+  };
+
+  return (
+    <form className="grid font-body" onSubmit={handleSubmit}>
+      <label className="form-control w-full max-w-lg justify-self-center">
+        <div className="label">
+          <span className="label-text font-semibold font-body text-sm">
+            Edit your epxense name
+          </span>
+        </div>
+        <input
+          type="text"
+          placeholder="Type here"
+          className="input input-bordered w-full max-w-lg"
+          name="total-balance"
+        />
+      </label>{" "}
+      <label className="form-control w-full max-w-lg justify-self-center">
+        <div className="label">
+          <span className="label-text font-semibold font-body text-sm">
+            Edit your expenditure amount
+          </span>
+        </div>
+        <input
+          type="text"
+          placeholder="Type here"
+          className="input input-bordered w-full max-w-lg"
+          name="total-balance"
+        />
+      </label>{" "}
+      <button className="btn btn-accent mt-6">Save</button>
+    </form>
+  );
+};
 
 const FinanceForm = () => {
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  const openPopup = () => setIsPopupOpen(true);
+  const closePopup = () => setIsPopupOpen(false);
+
   return (
     <article className="mt-[6rem] mb-[8rem]">
       <form
@@ -91,6 +137,58 @@ const FinanceForm = () => {
             </svg>
           </button>
         </form>
+        <div className="overflow-x-auto mt-8">
+          <table className="table table-zebra">
+            <Popup
+              isOpen={isPopupOpen}
+              onClose={closePopup}
+              children={<PopupContent closePopup={closePopup} />}
+            />
+            {/* head */}
+            <thead className="font-heading text-sm">
+              <tr>
+                <th></th>
+                <th>Expense Title</th>
+                <th>Expenditure Amount</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody className="font-body">
+              {/* row 1 */}
+              <tr>
+                <th>1</th>
+                <td>Grocery</td>
+                <td>Quality Control Specialist</td>
+                <td className="flex gap-2">
+                  <button className="btn btn-warning" onClick={openPopup}>
+                    Edit
+                  </button>
+                  <button className="btn btn-error">Remove</button>
+                </td>
+              </tr>
+              {/* row 2 */}
+              <tr>
+                <th>2</th>
+                <td>Hart Hagerty</td>
+                <td>Desktop Support Technician</td>
+                <td className="flex gap-2">
+                  <button className="btn btn-warning">Edit</button>
+                  <button className="btn btn-error">Remove</button>
+                </td>{" "}
+              </tr>
+              {/* row 3 */}
+              <tr>
+                <th>3</th>
+                <td>Brice Swyre</td>
+                <td>Tax Accountant</td>
+                <td className="flex gap-2">
+                  <button className="btn btn-warning">Edit</button>
+                  <button className="btn btn-error">Remove</button>
+                </td>{" "}
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </article>
   );
