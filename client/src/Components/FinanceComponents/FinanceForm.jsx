@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Popup from "../Popup";
+import "./styles.module.css";
+import Toast from "../ToastComp";
 
 const PopupContent = ({ closePopup }) => {
   const handleSubmit = (e) => {
@@ -43,14 +45,105 @@ const PopupContent = ({ closePopup }) => {
 
 const FinanceForm = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-
   const openPopup = () => setIsPopupOpen(true);
   const closePopup = () => setIsPopupOpen(false);
 
+  const [isToastOpen, setIsToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const openToast = () => setIsToastOpen(true);
+  const closeToast = () => setIsToastOpen(false);
+
+  const [mainInfoForm, setMainInform] = useState({
+    totalBalance: 0,
+    monthlyExpense: 0,
+  });
+
+  const handleMainInfoChange = (e) => {
+    let { name, value } = e.target;
+
+    value = parseInt(value.trim());
+
+    setMainInform({
+      ...mainInfoForm,
+      [name]: value,
+    });
+  };
+
+  const handleMainInfoSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!mainInfoForm.monthlyExpense || !mainInfoForm.totalBalance) {
+      setToastMessage("No Values Provided");
+      openToast();
+      return;
+    }
+
+    if (mainInfoForm.monthlyExpense < 0 || mainInfoForm.totalBalance < 0) {
+      // setIsToastOpen(true);
+      setToastMessage("Values must be positive");
+      openToast();
+      return;
+    }
+
+    console.log(mainInfoForm);
+  };
+
+  //  ==============
+  // Expense Section vars
+  //  ==============
+
+  const [expenseInfoForm, setExpenseInfoForm] = useState({
+    expenseTitle: "",
+    expenditureAmount: 0,
+  });
+
+  const handleExpenseDataChange = (e) => {
+    e.preventDefault();
+    let { name, value } = e.target;
+
+    if (name === "expenditureAmount") {
+      value = parseInt(value);
+    }
+
+    setExpenseInfoForm({
+      ...expenseInfoForm,
+      [name]: value,
+    });
+  };
+
+  const handleAddNewExpense = (e) => {
+    e.preventDefault();
+
+    if (!expenseInfoForm.expenditureAmount || !expenseInfoForm.expenseTitle) {
+      setToastMessage("Please Provide Values in both Fields");
+      openToast();
+      return;
+    }
+
+    if (expenseInfoForm.expenseTitle.length < 3) {
+      setToastMessage("Expense Title must be more than 3 characters");
+      openToast();
+      return;
+    }
+
+    if (expenseInfoForm.expenditureAmount < 0) {
+      setToastMessage("Expense Amount cannot be negative");
+      openToast();
+      return;
+    }
+
+    console.log(expenseInfoForm);
+  };
+
   return (
     <article className="mt-[6rem] mb-[8rem]">
+      <Toast
+        isVisible={isToastOpen}
+        onClose={closeToast}
+        message={toastMessage}
+      />
       <form
-        action=""
+        onSubmit={handleMainInfoSubmit}
         className="grid justify-center md:grid-cols-2 md:items-center"
       >
         <label className="form-control w-full max-w-lg justify-self-center">
@@ -60,10 +153,11 @@ const FinanceForm = () => {
             </span>
           </div>
           <input
-            type="text"
+            type="number"
             placeholder="Type here"
             className="input input-bordered w-full max-w-lg"
-            name="total-balance"
+            name="totalBalance"
+            onChange={handleMainInfoChange}
           />
         </label>
         <label className="form-control w-full max-w-lg justify-self-center mt-4 md:mt-0">
@@ -73,10 +167,11 @@ const FinanceForm = () => {
             </span>
           </div>
           <input
-            type="text"
+            type="number"
             placeholder="Type here"
             className="input input-bordered w-full max-w-lg"
-            name="monthly-expense"
+            name="monthlyExpense"
+            onChange={handleMainInfoChange}
           />
         </label>
         <button className="btn btn-accent mt-16 max-w-max md:col-span-2 justify-self-center font-body">
@@ -98,7 +193,10 @@ const FinanceForm = () => {
         <h2 className="text-center font-heading font-bold text-3xl mt-[5rem] mb-16">
           Expense Details
         </h2>
-        <form className="grid items-center justify-items-center gap-4">
+        <form
+          className="grid items-center justify-items-center gap-4"
+          onSubmit={handleAddNewExpense}
+        >
           <label className="form-control w-full max-w-lg justify-self-center mt-4 md:mt-0">
             <div className="label">
               <span className="label-text font-semibold font-body text-lg">
@@ -109,7 +207,8 @@ const FinanceForm = () => {
               type="text"
               placeholder="Type here"
               className="input input-bordered w-full max-w-lg"
-              name="expense-title"
+              name="expenseTitle"
+              onChange={handleExpenseDataChange}
             />
           </label>
           <label className="form-control w-full max-w-lg justify-self-center mt-4 md:mt-0">
@@ -119,10 +218,11 @@ const FinanceForm = () => {
               </span>
             </div>
             <input
-              type="text"
+              type="number"
               placeholder="Type here"
               className="input input-bordered w-full max-w-lg"
-              name="expense-amount"
+              name="expenditureAmount"
+              onChange={handleExpenseDataChange}
             />
           </label>
           <button className="btn btn-accent md:col-span-2 mt-16">

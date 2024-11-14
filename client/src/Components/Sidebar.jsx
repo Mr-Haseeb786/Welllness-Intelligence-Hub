@@ -75,7 +75,7 @@ const Sidebar = ({ children }) => {
             <Link to={"/"}>Home</Link>
           </li>
           <li className="pl-4 font-body">
-            <Link to={"/"}>Edit Info</Link>
+            <Link to={"/finance-tracker/edit-info"}>Edit Info</Link>
           </li>
           <li>
             <h2 className="font-bold font-heading text-xl">Health Tracker</h2>
