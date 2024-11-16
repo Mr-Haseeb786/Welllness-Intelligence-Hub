@@ -156,7 +156,7 @@ const AddAmountPopupContent = ({ closePopup }) => {
   const closeToast = () => setToastVisible(false);
 
   const handleChange = (e) => {
-    setAddAmount(e.target.value);
+    setAddAmount(parseInt(e.target.value));
     return;
   };
 
@@ -212,6 +212,11 @@ const SavingGoals = () => {
   const openAddAmount = () => setIsAddAmountPopupOpen(true);
   const closeAddAnount = () => setIsAddAmountPopupOpen(false);
 
+  const removeGoal = async () => {
+    alert("Goal Removed");
+    return;
+  };
+
   return (
     <div className="mt-16 bg-blue-400 mb-16 grid ">
       <Popup
@@ -265,10 +270,6 @@ const SavingGoals = () => {
                   name="goalDeadline"
                 />
               </label>{" "}
-              {/* <p>Deadline</p> */}
-              {/* <p className="justify-self-end">Date</p>
-               */}
-              {/* Edit option needs to be added */}
             </div>
             <div className="my-4 relative">
               <div>
@@ -308,7 +309,9 @@ const SavingGoals = () => {
               </button>
             </div>
             <div className="card-actions justify-end">
-              <button className="btn">Cancel Goal</button>
+              <button className="btn" onClick={removeGoal}>
+                Cancel Goal
+              </button>
             </div>
           </div>
         </article>
@@ -408,7 +411,9 @@ const SavingGoals = () => {
               </button>
             </div>{" "}
             <div className="card-actions justify-end">
-              <button className="btn">Cancel Goal</button>
+              <button className="btn" onClick={removeGoal}>
+                Cancel Goal
+              </button>
             </div>
           </div>
         </article>
