@@ -12,6 +12,7 @@ import {
 } from "chart.js/auto";
 import { Doughnut } from "react-chartjs-2";
 import Popup from "../Popup";
+import Toast from "../ToastComp";
 
 ChartJS.register(
   CategoryScale,
@@ -24,13 +25,67 @@ ChartJS.register(
 );
 
 const AddSavingGoal = ({ closePop }) => {
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+
+  const openToast = () => setToastVisible(true);
+  const closeToast = () => setToastVisible(false);
+
+  const [goalData, setGoalData] = useState({
+    goalTitle: "",
+    goalTarget: 0,
+    goalDeadline: "",
+    goalStartingAmount: 0,
+  });
+
+  const handleChange = (e) => {
+    let { name, value } = e.target;
+
+    if (name === "goalTarget" || name === "goalStartingAmount") {
+      value = parseInt(value);
+    }
+
+    setGoalData({
+      ...goalData,
+      [name]: value,
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const { goalDeadline, goalStartingAmount, goalTarget, goalTitle } =
+      goalData;
+
+    if (!goalData || !goalDeadline || !goalTarget || !goalTitle) {
+      setToastMessage("Please provide values in all fields");
+      openToast();
+      return;
+    }
+
+    if (goalTarget <= 0) {
+      setToastMessage("Target amount must be greater than zero");
+      openToast();
+      return;
+    }
+
+    if (goalStartingAmount < 0) {
+      setToastMessage("Starting amount can not be zero");
+      openToast();
+      return;
+    }
+
+    console.log(goalData);
     closePop();
   };
 
   return (
     <form className="grid" onSubmit={handleSubmit}>
+      <Toast
+        isVisible={toastVisible}
+        message={toastMessage}
+        onClose={closeToast}
+      />
       <label className="form-control w-full max-w-lg justify-self-center">
         <div className="label">
           <span className="label-text font-semibold font-body text-sm">
@@ -42,6 +97,7 @@ const AddSavingGoal = ({ closePop }) => {
           placeholder="Type here"
           className="input input-bordered w-full max-w-lg"
           name="goalTitle"
+          onChange={handleChange}
         />
       </label>{" "}
       <label className="form-control w-full max-w-lg justify-self-center">
@@ -51,10 +107,11 @@ const AddSavingGoal = ({ closePop }) => {
           </span>
         </div>
         <input
-          type="text"
+          type="number"
           placeholder="Type here"
           className="input input-bordered w-full max-w-lg"
-          name="targetAmount"
+          name="goalTarget"
+          onChange={handleChange}
         />
       </label>{" "}
       <label className="form-control w-full max-w-lg justify-self-center">
@@ -67,6 +124,7 @@ const AddSavingGoal = ({ closePop }) => {
           type="date"
           className="input input-bordered w-full max-w-lg"
           name="goalDeadline"
+          onChange={handleChange}
         />
       </label>{" "}
       <label className="form-control w-full max-w-lg justify-self-center">
@@ -76,10 +134,11 @@ const AddSavingGoal = ({ closePop }) => {
           </span>
         </div>
         <input
-          type="text"
+          type="number"
+          onChange={handleChange}
           placeholder="Type here"
           className="input input-bordered w-full max-w-lg"
-          name="startingAmount"
+          name="goalStartingAmount"
         />
       </label>{" "}
       <button className="btn btn-accent mt-6">Save</button>
@@ -88,14 +147,40 @@ const AddSavingGoal = ({ closePop }) => {
 };
 
 const AddAmountPopupContent = ({ closePopup }) => {
-  const handleSubmit = (e) => {
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+
+  const [addAmount, setAddAmount] = useState(0);
+
+  const openToast = () => setToastVisible(true);
+  const closeToast = () => setToastVisible(false);
+
+  const handleChange = (e) => {
+    setAddAmount(e.target.value);
+    return;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!addAmount || addAmount <= 0) {
+      setToastMessage("Amount must be greater than zero");
+      openToast();
+      return;
+    }
+
+    console.log(addAmount);
     closePopup();
+    return;
   };
 
   return (
     <form className="grid" onSubmit={handleSubmit}>
+      <Toast
+        isVisible={toastVisible}
+        message={toastMessage}
+        onClose={closeToast}
+      />
       <label className="form-control w-full max-w-lg justify-self-center">
         <div className="label">
           <span className="label-text font-semibold font-body text-sm">
@@ -106,7 +191,8 @@ const AddAmountPopupContent = ({ closePopup }) => {
           type="text"
           placeholder="Type here"
           className="input input-bordered w-full max-w-lg"
-          name="startingAmount"
+          name="addAmount"
+          onChange={handleChange}
         />
       </label>{" "}
       <button type="submit" className="btn btn-accent mt-6">
