@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { validateAccountCreation } from "../lib/libFunctions";
+import { useAuth, useSignUp } from "@clerk/clerk-react";
 
 const SignUpPage = () => {
+  const { isLoaded, signUp } = useSignUp();
+  const { isSignedIn, userId } = useAuth();
+
+  console.log(isSignedIn, userId);
+
   const [formData, setFormData] = useState({
     email: "",
     username: "User",
@@ -28,7 +34,7 @@ const SignUpPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {
@@ -63,6 +69,20 @@ const SignUpPage = () => {
     }
 
     // Api call
+
+    console.log(formData);
+
+    try {
+      await signUp.create({
+        emailAddress: formData.email,
+        password: formData.password,
+      });
+
+      console.log(formData);
+    } catch (error) {
+      console.log("Error signing up: " + error);
+      return;
+    }
 
     return;
   };

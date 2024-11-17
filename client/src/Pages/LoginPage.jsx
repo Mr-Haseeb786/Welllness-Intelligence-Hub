@@ -1,7 +1,10 @@
+import { useSignIn } from "@clerk/clerk-react";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 const LoginPage = () => {
+  const { isLoaded, signIn } = useSignIn();
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,7 +28,7 @@ const LoginPage = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newErrors = {
@@ -35,9 +38,25 @@ const LoginPage = () => {
 
     setErrors(newErrors);
 
-    console.log(formData);
+    if (!isLoaded) return;
 
-    // Api Call
+    try {
+      const signInAttempt = await signIn.create({
+        identifier: formData.email,
+        password: formData.password,
+      });
+
+      if (signInAttempt.status === "complete") {
+        alert("signed In");
+      } else {
+        console.log("Further action required:", signInAttempt);
+      }
+    } catch (error) {
+      console.log("Error Signing in " + error);
+      alert("Account does not exist!");
+    }
+
+    console.log(formData);
   };
 
   return (
