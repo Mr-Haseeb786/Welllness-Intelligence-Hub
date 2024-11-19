@@ -16,6 +16,14 @@ const FinanceInfoSchema = new Schema({
     ref: "users",
     required: true,
   },
+  expenseRef: {
+    type: Schema.Types.ObjectId,
+    ref: "expense",
+  },
+  savingsRef: {
+    type: Schema.Types.ObjectId,
+    ref: "savings",
+  },
 });
 
 const FinanceModel = model("financeinfo", FinanceInfoSchema);

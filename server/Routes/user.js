@@ -10,6 +10,7 @@ const {
   handleUpdateExpenses,
   handlePostExpenses,
   handlePostBasics,
+  handleUserSignout,
 } = require("../Controllers/user");
 const { bodyCheck } = require("../Middlewares/generalCheck");
 
@@ -21,6 +22,7 @@ router.get("/", (req, res) => res.json({ msg: "Working" }));
 
 router.post("/signin", handleUserSignIn);
 router.post("/signup", handleUserSignUp);
+router.post("/signout", handleUserSignout);
 
 router.get("/home", handleGetUserInfo);
 
