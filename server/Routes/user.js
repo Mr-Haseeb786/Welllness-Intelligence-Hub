@@ -11,6 +11,8 @@ const {
   handlePostExpenses,
   handlePostBasics,
   handleUserSignout,
+  handleDeleteExpenses,
+  handleGetSavingGoals,
 } = require("../Controllers/user");
 const { bodyCheck } = require("../Middlewares/generalCheck");
 
@@ -20,20 +22,22 @@ router.use(bodyCheck);
 
 router.get("/", (req, res) => res.json({ msg: "Working" }));
 
-router.post("/signin", handleUserSignIn);
-router.post("/signup", handleUserSignUp);
-router.post("/signout", handleUserSignout);
+router.post("/signin", handleUserSignIn); // checked
+router.post("/signup", handleUserSignUp); // checked
+router.post("/signout", handleUserSignout); // checked
 
-router.get("/home", handleGetUserInfo);
+router.get("/home", handleGetUserInfo); // checked
 
-router.post("/saving-goals", handlePostNewGoal);
-router.delete("/saving-goals", handleDeleteSavingGoal);
-router.put("/saving-goals", handleUpdateSavingGoal);
+router.post("/saving-goals", handlePostNewGoal); // checked
+router.delete("/saving-goals", handleDeleteSavingGoal); // checked
+router.put("/saving-goals", handleUpdateSavingGoal); // checked
+router.get("/saving-goals", handleGetSavingGoals); // checked
 
-router.get("/expenses", handleGetExpenses);
-router.put("/expenses", handleUpdateExpenses);
-router.post("/expenses", handlePostExpenses);
+router.get("/expenses", handleGetExpenses); // checked
+router.post("/expenses", handlePostExpenses); // checked
+router.put("/expenses", handleUpdateExpenses); // checked
+router.delete("/expenses", handleDeleteExpenses);
 
-router.post("/basics", handlePostBasics);
+router.post("/basics", handlePostBasics); // checked
 
 module.exports = router;

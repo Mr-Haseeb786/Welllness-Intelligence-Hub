@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./styles.module.css";
 import {
   Chart as ChartJS,
@@ -13,6 +13,7 @@ import {
 import { Doughnut } from "react-chartjs-2";
 import Popup from "../Popup";
 import Toast from "../ToastComp";
+import { getQueryDb, postPutQueryDb } from "../../api/queryFuncs";
 
 ChartJS.register(
   CategoryScale,
@@ -24,7 +25,7 @@ ChartJS.register(
   Title
 );
 
-const AddSavingGoal = ({ closePop }) => {
+const AddSavingGoal = ({ closePop, setRevalidateGoals }) => {
   const [toastMessage, setToastMessage] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
 
@@ -51,7 +52,7 @@ const AddSavingGoal = ({ closePop }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const { goalDeadline, goalStartingAmount, goalTarget, goalTitle } =
@@ -75,6 +76,22 @@ const AddSavingGoal = ({ closePop }) => {
       return;
     }
 
+    const body = {
+      title: goalTitle,
+      deadline: goalDeadline,
+      savedAmount: goalStartingAmount,
+      targetAmount: goalTarget - goalStartingAmount,
+    };
+
+    const { success, data } = await postPutQueryDb(
+      "/user/saving-goals",
+      "POST",
+      body
+    );
+
+    setRevalidateGoals(Math.random());
+
+    console.log(data);
     console.log(goalData);
     closePop();
   };
@@ -146,7 +163,11 @@ const AddSavingGoal = ({ closePop }) => {
   );
 };
 
-const AddAmountPopupContent = ({ closePopup }) => {
+const AddAmountPopupContent = ({
+  closePopup,
+  savingId,
+  setRevalidateGoals,
+}) => {
   const [toastMessage, setToastMessage] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
 
@@ -168,6 +189,20 @@ const AddAmountPopupContent = ({ closePopup }) => {
       openToast();
       return;
     }
+
+    const body = {
+      goalId: savingId,
+      newAmount: addAmount,
+    };
+
+    const { data, success } = await postPutQueryDb(
+      "/user/saving-goals",
+      "PUT",
+      body
+    );
+
+    setRevalidateGoals(Math.random());
+    console.log(data);
 
     console.log(addAmount);
     closePopup();
@@ -203,6 +238,18 @@ const AddAmountPopupContent = ({ closePopup }) => {
 };
 
 const SavingGoals = () => {
+  const [savingGoals, setSavingGoals] = useState([]);
+  const [savingId, setSavingId] = useState("");
+  const [revalidateGoals, setRevalidateGoals] = useState(0);
+
+  useEffect(() => {
+    const getSavingGoals = async () => {
+      const { success, data } = await getQueryDb("/user/saving-goals");
+      setSavingGoals(data.savingGoals);
+    };
+    getSavingGoals();
+  }, [revalidateGoals]);
+
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isAddAmountPopupOpen, setIsAddAmountPopupOpen] = useState(false);
 
@@ -212,20 +259,47 @@ const SavingGoals = () => {
   const openAddAmount = () => setIsAddAmountPopupOpen(true);
   const closeAddAnount = () => setIsAddAmountPopupOpen(false);
 
-  const removeGoal = async () => {
-    alert("Goal Removed");
+  const removeGoal = async (id) => {
+    console.log("Removed", id);
+
+    const body = {
+      goalId: id,
+    };
+
+    const ans = confirm("Are you sure to remove the goal?");
+
+    if (!ans) return;
+
+    const { success, data } = await postPutQueryDb(
+      "/user/saving-goals",
+      "DELETE",
+      body
+    );
+    if (success) setRevalidateGoals(Math.random());
+
     return;
   };
 
   return (
     <div className="mt-16 bg-blue-400 mb-16 grid ">
       <Popup
-        children={<AddSavingGoal closePop={closePopup} />}
+        children={
+          <AddSavingGoal
+            closePop={closePopup}
+            setRevalidateGoals={setRevalidateGoals}
+          />
+        }
         isOpen={isPopupOpen}
         onClose={closePopup}
       />
       <Popup
-        children={<AddAmountPopupContent closePopup={closeAddAnount} />}
+        children={
+          <AddAmountPopupContent
+            closePopup={closeAddAnount}
+            savingId={savingId}
+            setRevalidateGoals={setRevalidateGoals}
+          />
+        }
         isOpen={isAddAmountPopupOpen}
         onClose={closeAddAnount}
       />
@@ -247,176 +321,103 @@ const SavingGoals = () => {
         </svg>
       </button>
       <div className={styles.savingGoalslayout}>
-        <article className="card font-body bg-primary text-primary-content w-96">
-          <div className="card-body">
-            <h2 className="text-2xl font-semibold font-heading">Goal title</h2>
-            <div className="grid grid-cols-2">
-              <p className="self-end text-xl">Target</p>
-              <p className="justify-self-end">
-                Rs.
-                <span className="font-body font-bold text-2xl">1234</span>
-              </p>
-            </div>
-            <div className="grid ">
-              <label className="form-control w-full max-w-lg justify-self-center">
-                <div className="label">
-                  <span className="label-text text-white font-semibold font-body text-sm">
-                    Select Deadline Date
-                  </span>
-                </div>
-                <input
-                  type="date"
-                  className="text-black bg-blue-400 input input-bordered w-full max-w-lg"
-                  name="goalDeadline"
-                />
-              </label>{" "}
-            </div>
-            <div className="my-4 relative">
-              <div>
-                <Doughnut
-                  data={{
-                    labels: ["Completed", "Remaining"],
-                    datasets: [
-                      {
-                        label: "Poll",
-                        data: [70, 30],
-                        circumference: 180,
-                        rotation: 270,
-                      },
-                    ],
-                  }}
-                  options={{
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                    },
-                  }}
-                />
-              </div>
-              <button
-                className="btn btn-accent rounded-full absolute translate-y-3 -translate-x-1 bottom-0 left-0"
-                onClick={openAddAmount}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  height={14}
-                  width={12.25}
-                  viewBox="0 0 448 512"
+        {savingGoals.length === 0
+          ? `N\A`
+          : savingGoals.map((goal) => {
+              const { _id, title, deadline, targetAmount, savedAmount } = goal;
+
+              console.log(targetAmount, savedAmount);
+
+              return (
+                <article
+                  key={_id}
+                  data-id={_id}
+                  className="card font-body bg-primary text-primary-content w-96"
                 >
-                  <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z" />
-                </svg>
-              </button>
-            </div>
-            <div className="card-actions justify-end">
-              <button className="btn" onClick={removeGoal}>
-                Cancel Goal
-              </button>
-            </div>
-          </div>
-        </article>
-        <article className="card font-body bg-primary text-primary-content w-96">
-          <div className="card-body">
-            <h2 className="text-2xl font-semibold font-heading">Goal title</h2>
-            <div className="grid grid-cols-2">
-              <p className="self-end text-xl">Target</p>
-              <p className="justify-self-end">
-                Rs.
-                <span className="font-body font-bold text-2xl">1234</span>
-              </p>
-            </div>
-            <div className="grid grid-cols-2">
-              <p>Deadline</p>
-              <p className="justify-self-end">Date</p>
-              {/* Edit option needs to be added */}
-            </div>
-            <div className="my-4">
-              <Doughnut
-                data={{
-                  labels: ["Completed", "Remaining"],
-                  datasets: [
-                    {
-                      label: "Poll",
-                      data: [70, 30],
-                      backgroundColor: ["green", "yellow"],
-                      circumference: 180,
-                      rotation: 270,
-                    },
-                  ],
-                }}
-                options={{
-                  plugins: {
-                    legend: {
-                      display: false,
-                    },
-                  },
-                }}
-              />
-            </div>{" "}
-            <div className="card-actions justify-end">
-              <button className="btn">Cancel Goal</button>
-            </div>
-          </div>
-        </article>
-        <article className="card font-body bg-primary text-primary-content w-96">
-          <div className="card-body">
-            <h2 className="text-2xl font-semibold font-heading">Goal title</h2>
-            <div className="grid grid-cols-2">
-              <p className="self-end text-xl">Target</p>
-              <p className="justify-self-end">
-                Rs.
-                <span className="font-body font-bold text-2xl">1234</span>
-              </p>
-            </div>
-            <div className="grid grid-cols-2">
-              <p>Deadline</p>
-              <p className="justify-self-end">Date</p>
-              {/* Edit option needs to be added */}
-            </div>
-            <div className="my-4 relative">
-              <div>
-                <Doughnut
-                  data={{
-                    labels: ["Completed", "Remaining"],
-                    datasets: [
-                      {
-                        label: "Poll",
-                        data: [70, 30],
-                        circumference: 180,
-                        rotation: 270,
-                      },
-                    ],
-                  }}
-                  options={{
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                    },
-                  }}
-                />
-              </div>
-              <button
-                className="btn btn-accent rounded-full absolute translate-y-3 -translate-x-1 bottom-0 left-0"
-                onClick={openAddAmount}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  height={14}
-                  width={12.25}
-                  viewBox="0 0 448 512"
-                >
-                  <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z" />
-                </svg>
-              </button>
-            </div>{" "}
-            <div className="card-actions justify-end">
-              <button className="btn" onClick={removeGoal}>
-                Cancel Goal
-              </button>
-            </div>
-          </div>
-        </article>
+                  <div className="card-body">
+                    <h2 className="text-2xl font-semibold font-heading">
+                      {title}
+                    </h2>
+                    <div className="grid grid-cols-2">
+                      <p className="self-end text-xl">Target</p>
+                      <p className="justify-self-end">
+                        Rs.
+                        <span className="font-body font-bold text-2xl">
+                          {targetAmount}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="grid ">
+                      <label className="form-control w-full max-w-lg justify-self-center">
+                        <div className="label">
+                          <span className="label-text text-white font-semibold font-body text-sm">
+                            Deadline Date
+                          </span>
+                        </div>
+                        <input
+                          type="text"
+                          className="text-black bg-blue-400 input input-bordered w-full max-w-lg"
+                          name="goalDeadline"
+                          value={deadline.substring(0, 10)}
+                        />
+                      </label>{" "}
+                    </div>
+                    <div className="my-4 relative">
+                      <div>
+                        <Doughnut
+                          data={{
+                            labels: ["Completed", "Remaining"],
+                            datasets: [
+                              {
+                                label: "Poll",
+                                data: [savedAmount, targetAmount],
+                                circumference: 180,
+                                rotation: 270,
+                              },
+                            ],
+                          }}
+                          options={{
+                            plugins: {
+                              legend: {
+                                display: false,
+                              },
+                            },
+                          }}
+                        />
+                      </div>
+                      <button
+                        className="btn btn-accent rounded-full absolute translate-y-3 -translate-x-1 bottom-0 left-0"
+                        data-id={_id}
+                        onClick={(e) => {
+                          setSavingId(e.target.getAttribute("data-id"));
+                          openAddAmount();
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          height={14}
+                          width={12.25}
+                          viewBox="0 0 448 512"
+                        >
+                          <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="card-actions justify-end">
+                      <button
+                        data-id={_id}
+                        className="btn"
+                        onClick={(e) => {
+                          removeGoal(e.target.getAttribute("data-id"));
+                        }}
+                      >
+                        Cancel Goal
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
       </div>
     </div>
   );

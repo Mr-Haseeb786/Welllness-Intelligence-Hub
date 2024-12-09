@@ -1,11 +1,51 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Popup from "../Popup";
 import "./styles.module.css";
 import Toast from "../ToastComp";
+import {
+  deleteQueryDb,
+  getQueryDb,
+  postPutQueryDb,
+} from "../../api/queryFuncs";
 
-const PopupContent = ({ closePopup }) => {
-  const handleSubmit = (e) => {
+const PopupContent = ({
+  closePopup,
+  expenseId,
+  setRevalidateExpenses = { setRevalidateExpenses },
+}) => {
+  const [expenseName, setExpenseName] = useState("");
+  const [expenseAmount, setExpenseAmount] = useState(0);
+
+  const onExpenseNameChange = (e) => setExpenseName(e.target.value);
+  const onExpenseAmountChange = (e) => setExpenseAmount(e.target.value);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!expenseName || !expenseAmount) {
+      alert("Please enter all the values");
+      return;
+    }
+
+    const body = {
+      expenseId,
+      newExpenseInfo: {
+        name: expenseName,
+        amount: expenseAmount,
+      },
+    };
+
+    const { success, data } = await postPutQueryDb(
+      "/user/expenses",
+      "PUT",
+      body
+    );
+
+    if (success) {
+      setRevalidateExpenses(Math.random);
+    }
+
+    console.log(data);
 
     closePopup();
   };
@@ -23,6 +63,8 @@ const PopupContent = ({ closePopup }) => {
           placeholder="Type here"
           className="input input-bordered w-full max-w-lg"
           name="total-balance"
+          value={expenseName}
+          onChange={onExpenseNameChange}
         />
       </label>{" "}
       <label className="form-control w-full max-w-lg justify-self-center">
@@ -36,6 +78,8 @@ const PopupContent = ({ closePopup }) => {
           placeholder="Type here"
           className="input input-bordered w-full max-w-lg"
           name="total-balance"
+          value={expenseAmount}
+          onChange={onExpenseAmountChange}
         />
       </label>{" "}
       <button className="btn btn-accent mt-6">Save</button>
@@ -44,19 +88,35 @@ const PopupContent = ({ closePopup }) => {
 };
 
 const FinanceForm = () => {
+  const [expenseData, setExpenseData] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const openPopup = () => setIsPopupOpen(true);
   const closePopup = () => setIsPopupOpen(false);
+  const [expenseId, setExpenseId] = useState("");
 
   const [isToastOpen, setIsToastOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const openToast = () => setIsToastOpen(true);
   const closeToast = () => setIsToastOpen(false);
+  const [reValidateExpenses, setRevalidateExpenses] = useState("");
 
   const [mainInfoForm, setMainInform] = useState({
     totalBalance: 0,
+    monthlyIncome: 0,
     monthlyExpense: 0,
   });
+
+  useEffect(() => {
+    const getExpenses = async () => {
+      const { success, data } = await getQueryDb("/user/expenses");
+
+      console.log("Expenses Data ", data.expenses);
+
+      setExpenseData(data.expenses);
+    };
+
+    getExpenses();
+  }, [reValidateExpenses]);
 
   const handleMainInfoChange = (e) => {
     let { name, value } = e.target;
@@ -69,23 +129,53 @@ const FinanceForm = () => {
     });
   };
 
+  const handleRemoveExpense = async (expenseId) => {
+    const body = {
+      expenseId,
+    };
+
+    const { success, data } = await postPutQueryDb(
+      "/user/expenses",
+      "DELETE",
+      body
+    );
+
+    if (success) setRevalidateExpenses(Math.random());
+
+    console.log(data);
+  };
+
   const handleMainInfoSubmit = async (e) => {
     e.preventDefault();
 
-    if (!mainInfoForm.monthlyExpense || !mainInfoForm.totalBalance) {
+    if (
+      !mainInfoForm.monthlyIncome ||
+      !mainInfoForm.totalBalance ||
+      !mainInfoForm.monthlyExpense
+    ) {
       setToastMessage("No Values Provided");
       openToast();
       return;
     }
 
-    if (mainInfoForm.monthlyExpense < 0 || mainInfoForm.totalBalance < 0) {
+    if (
+      mainInfoForm.monthlyIncome < 0 ||
+      mainInfoForm.totalBalance < 0 ||
+      !mainInfoForm.monthlyExpense
+    ) {
       // setIsToastOpen(true);
       setToastMessage("Values must be positive");
       openToast();
       return;
     }
 
-    console.log(mainInfoForm);
+    try {
+      const resp = await postPutQueryDb("/user/basics", "POST", mainInfoForm);
+
+      console.log(resp);
+    } catch (error) {
+      console.log("Error: ", error);
+    }
   };
 
   //  ==============
@@ -111,7 +201,7 @@ const FinanceForm = () => {
     });
   };
 
-  const handleAddNewExpense = (e) => {
+  const handleAddNewExpense = async (e) => {
     e.preventDefault();
 
     if (!expenseInfoForm.expenditureAmount || !expenseInfoForm.expenseTitle) {
@@ -131,11 +221,36 @@ const FinanceForm = () => {
       openToast();
       return;
     }
-    // query
+
+    // querys
+    const { success, data } = await getQueryDb("/user/home");
+
+    if (!success) {
+      console.log("Error");
+      return;
+    }
+
+    const body = {
+      name: expenseInfoForm.expenseTitle,
+      amount: expenseInfoForm.expenditureAmount,
+      financeRef: data.financeInfo._id,
+    };
+
+    const { success: expenseSuccess, data: newExpense } = await postPutQueryDb(
+      "/user/expenses",
+      "POST",
+      body
+    );
+
+    console.log(newExpense);
     // revalidate query
+
+    setRevalidateExpenses(Math.random());
 
     console.log(expenseInfoForm);
   };
+
+  let expenseSerial = 0;
 
   return (
     <article className="mt-[6rem] mb-[8rem]">
@@ -166,6 +281,20 @@ const FinanceForm = () => {
           <div className="label">
             <span className="label-text font-semibold font-body text-lg">
               Enter your total Monthly Expense
+            </span>
+          </div>
+          <input
+            type="number"
+            placeholder="Type here"
+            className="input input-bordered w-full max-w-lg"
+            name="monthlyIncome"
+            onChange={handleMainInfoChange}
+          />
+        </label>
+        <label className="form-control w-full max-w-lg justify-self-center md:col-span-2 mt-4 md:mt-8">
+          <div className="label">
+            <span className="label-text font-semibold font-body text-lg">
+              Enter your Monthly Income
             </span>
           </div>
           <input
@@ -244,7 +373,13 @@ const FinanceForm = () => {
             <Popup
               isOpen={isPopupOpen}
               onClose={closePopup}
-              children={<PopupContent closePopup={closePopup} />}
+              children={
+                <PopupContent
+                  closePopup={closePopup}
+                  expenseId={expenseId}
+                  setRevalidateExpenses={setRevalidateExpenses}
+                />
+              }
             />
             {/* head */}
             <thead className="font-heading text-sm">
@@ -256,38 +391,47 @@ const FinanceForm = () => {
               </tr>
             </thead>
             <tbody className="font-body">
-              {/* row 1 */}
-              <tr>
-                <th>1</th>
-                <td>Grocery</td>
-                <td>Quality Control Specialist</td>
-                <td className="flex gap-2">
-                  <button className="btn btn-warning" onClick={openPopup}>
-                    Edit
-                  </button>
-                  <button className="btn btn-error">Remove</button>
-                </td>
-              </tr>
-              {/* row 2 */}
-              <tr>
-                <th>2</th>
-                <td>Hart Hagerty</td>
-                <td>Desktop Support Technician</td>
-                <td className="flex gap-2">
-                  <button className="btn btn-warning">Edit</button>
-                  <button className="btn btn-error">Remove</button>
-                </td>{" "}
-              </tr>
-              {/* row 3 */}
-              <tr>
-                <th>3</th>
-                <td>Brice Swyre</td>
-                <td>Tax Accountant</td>
-                <td className="flex gap-2">
-                  <button className="btn btn-warning">Edit</button>
-                  <button className="btn btn-error">Remove</button>
-                </td>{" "}
-              </tr>
+              {expenseData.length === 0
+                ? "N/A"
+                : expenseData.map((expense) => {
+                    expenseSerial++;
+                    const { _id, name, amount } = expense;
+                    return (
+                      <tr key={_id} data-id={`${_id}`}>
+                        <th>{expenseSerial}</th>
+                        <td>{name}</td>
+                        <td>{amount}</td>
+                        <td className="flex gap-2">
+                          <button
+                            className="btn btn-warning"
+                            onClick={(e) => {
+                              setExpenseId(
+                                e.target.parentElement.parentElement.getAttribute(
+                                  "data-id"
+                                )
+                              );
+                              openPopup();
+                              return;
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="btn btn-error"
+                            onClick={(e) => {
+                              handleRemoveExpense(
+                                e.target.parentElement.parentElement.getAttribute(
+                                  "data-id"
+                                )
+                              );
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
             </tbody>
           </table>
         </div>

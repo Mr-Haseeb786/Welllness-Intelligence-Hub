@@ -8,8 +8,26 @@ const {
   verifyToken,
 } = require("../utils/jwtAuth");
 
+async function handleDeleteExpenses(req, res) {
+  const { expenseId } = req.body;
+
+  try {
+    const expense = await ExpenseModel.findByIdAndDelete(expenseId);
+    console.log(expense);
+
+    return res.status(200).json({ msg: "Successfully deleted expense" });
+  } catch (error) {
+    console.log("Error Deleting ", error);
+    return res.status(500).json({ msg: "error deleting" });
+  }
+}
+
 async function handleUserSignIn(req, res) {
   const { email, password } = req.body;
+
+  console.log(email, password);
+
+  console.log(req.body);
   const token = req.cookies.token;
 
   if (token) return res.status(400).json({ error: "Already logged in" });
@@ -25,6 +43,8 @@ async function handleUserSignIn(req, res) {
       password,
     });
 
+    console.log("FOund ", user);
+
     if (user) {
       const userInfo = {
         userId: user._id,
@@ -34,10 +54,11 @@ async function handleUserSignIn(req, res) {
 
       const token = createToken(userInfo);
       res.cookie("token", token);
+      console.log("Token Created");
 
       return res.status(200).json({ user });
     } else {
-      return res.status(402).json({ error: "User does not exist" });
+      return res.status(401).json({ error: "User does not exist" });
     }
   } catch (error) {
     res.status(500).json({ error: "Error Fetching from db" + error });
@@ -51,6 +72,8 @@ async function handleUserSignout(req, res) {
 
 async function handleUserSignUp(req, res) {
   const { name, email, password } = req.body;
+
+  console.log(req.body);
 
   if (!email || !name || !password) {
     return res.status(400).json({ error: "Incomplete Details" });
@@ -87,12 +110,12 @@ async function handleGetUserInfo(req, res) {
   const token = req.cookies.token;
   let user = null;
 
-  console.log(token);
+  console.log("User Token", token);
 
   try {
     user = getUserInfoFromToken(token);
 
-    console.log(user);
+    console.log("User Token Info", user);
 
     if (!user) return res.status(401).json({ msg: "Unauthorized" });
   } catch (error) {
@@ -102,7 +125,7 @@ async function handleGetUserInfo(req, res) {
 
   try {
     const financeInfo = await FinanceModel.findOne({
-      userOwner: user._id,
+      userOwner: user.userId,
     }).populate();
 
     if (!financeInfo) {
@@ -123,27 +146,36 @@ async function handlePostNewGoal(req, res) {
 
   const token = req.cookies.token;
   let user = null;
+  let financeId = null;
 
   try {
     user = getUserInfoFromToken(token);
     if (!user) return res.status(401).json({ msg: "Unauthorized" });
   } catch (error) {
     console.log(error);
-    return req.end("No token");
+    return res.send("No token");
+  }
+
+  try {
+    financeId = await FinanceModel.findOne({ userOwner: user.userId });
+
+    console.log(financeId);
+  } catch (error) {
+    return res.send("There was an error" + error);
   }
 
   try {
     const newGoal = await SavingsModel.create({
       title,
       deadline,
-      financeRef: user._id,
+      financeRef: financeId,
       savedAmount,
       targetAmount,
     });
 
     return req.status(201).json({ newGoal });
   } catch (error) {
-    return res.end(error);
+    return res.send(error);
   }
 }
 
@@ -194,7 +226,13 @@ async function handleUpdateSavingGoal(req, res) {
   try {
     const updatedGoal = await SavingsModel.updateOne(
       { _id: goalId },
-      { savedAmount: newAmount }
+      {
+        $inc: {
+          savedAmount: newAmount,
+          targetAmount: -newAmount,
+        },
+      },
+      { new: true }
     );
 
     return res.status(200).json({ msg: "Goal updated", updatedGoal });
@@ -331,10 +369,58 @@ async function handleGetHomePageInfo(req, res) {
 }
 
 async function handlePostBasics(req, res) {
-  const { totalBalance, monthlyIncome } = req.body;
+  const { totalBalance, monthlyIncome, monthlyExpense } = req.body;
 
   const token = req.cookies.token;
   let user = null;
+
+  console.log("User tokenss", token);
+
+  try {
+    user = getUserInfoFromToken(token);
+    console.log(user);
+
+    if (!user) return res.status(401).json({ msg: "Unauthorized" });
+  } catch (error) {
+    console.log(error);
+    return res.status(402).json({ error: "User not signed in" + error });
+  }
+
+  try {
+    const newBasicInfo = await FinanceModel.findOneAndUpdate(
+      {
+        userOwner: user.userId,
+      },
+      { totalBalance, monthlyIncome, monthlyExpense }
+    );
+
+    console.log(newBasicInfo);
+
+    if (newBasicInfo) return;
+  } catch (error) {
+    console.log(error);
+  }
+
+  try {
+    const newBasicInfo = await FinanceModel.create({
+      monthlyIncome,
+      totalBalance,
+      monthlyExpense,
+      userOwner: user.userId,
+    });
+
+    return res
+      .status(201)
+      .json({ msg: "Created new basic info ", newBasicInfo });
+  } catch (error) {
+    return res.end("There was an error" + error);
+  }
+}
+
+const handleGetSavingGoals = async (req, res) => {
+  const token = req.cookies.token;
+  let user = null;
+  let financeId = null;
 
   console.log(token);
 
@@ -349,19 +435,22 @@ async function handlePostBasics(req, res) {
   }
 
   try {
-    const newBasicInfo = await FinanceModel.create({
-      monthlyIncome,
-      totalBalance,
-      userOwner: user.userId,
+    financeId = await FinanceModel.find({ userOwner: user.userId });
+    console.log("Finance Id :" + financeId);
+  } catch (error) {
+    return res.end("there was an error " + error);
+  }
+
+  try {
+    const savingGoals = await SavingsModel.find({
+      financeRef: financeId,
     });
 
-    return res
-      .status(201)
-      .json({ msg: "Created new basic info ", newBasicInfo });
+    return res.status(200).json({ savingGoals });
   } catch (error) {
-    return res.end("There was an error" + error);
+    return res.end("There was an error " + error);
   }
-}
+};
 
 module.exports = {
   handleUserSignIn,
@@ -376,4 +465,6 @@ module.exports = {
   handlePostBasics,
   handleGetHomePageInfo,
   handleUserSignout,
+  handleDeleteExpenses,
+  handleGetSavingGoals,
 };

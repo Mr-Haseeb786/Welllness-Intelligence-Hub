@@ -1,5 +1,4 @@
-import React from "react";
-// import { Chart as ChartJS } from "react-chartjs-2"
+import React, { useEffect, useState } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +11,7 @@ import {
   defaults,
 } from "chart.js/auto";
 import { Doughnut, Line } from "react-chartjs-2";
+import { getQueryDb, postPutQueryDb } from "../../api/queryFuncs";
 
 ChartJS.register(
   CategoryScale,
@@ -27,6 +27,18 @@ defaults.maintainAspectRatio = false;
 defaults.responsive = true;
 
 const ExpenseDetails = () => {
+  const [expensesData, setExpensesData] = useState([]);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    const getExpenses = async () => {
+      const { success, data } = await getQueryDb("/user/expenses");
+      console.log("Expenses", data.expenses);
+      setExpensesData(data.expenses);
+    };
+    getExpenses();
+  }, []);
+
   return (
     <div className="bg-red-300 py-5">
       <h2 className="text-3xl mt-2 mb-5 font-heading text-center font-bold">
@@ -37,33 +49,42 @@ const ExpenseDetails = () => {
           <p className="text-xl text-center mb-5 font-heading font-semibold">
             Overall Expenses
           </p>
-          <Doughnut
-            data={{
-              labels: ["day", "month"],
-              datasets: [
-                {
-                  label: "Expenses",
-                  data: [12, 35],
-                },
-              ],
-            }}
-          />
+          {expensesData.length === 0 ? (
+            "N/A"
+          ) : (
+            <Doughnut
+              data={{
+                labels: expensesData.map((expenses) => expenses.name),
+                datasets: [
+                  {
+                    label: "Expenses",
+                    data: expensesData.map((expenses) => expenses.amount),
+                  },
+                ],
+              }}
+            />
+          )}
         </div>
         <div className="h-96 max-w-sm md:w-full mx-auto mb-5 mt-16 md:mt-0">
           <p className="text-xl text-center mb-5 font-heading font-semibold">
             Expense History
           </p>
-          <Line
-            data={{
-              labels: ["day", "month", "year", "b", "c", "d", "e", "g", "f"],
-              datasets: [
-                {
-                  label: "Expenses",
-                  data: [12, 35, 15, 80, 60, 70, 20, 45, 55],
-                },
-              ],
-            }}
-          />
+          {expensesData.length === 0 ? (
+            "N/A"
+          ) : (
+            <Line
+              data={{
+                labels: expensesData.map((expenses) => expenses.name),
+                datasets: [
+                  {
+                    label: "Expenses",
+                    data: expensesData.map((expenses) => expenses.amount),
+                    tension: 0.4,
+                  },
+                ],
+              }}
+            />
+          )}
         </div>
       </article>
     </div>

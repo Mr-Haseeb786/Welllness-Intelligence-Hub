@@ -1,7 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { getQueryDb, postPutQueryDb } from "../api/queryFuncs";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const logoutUser = async () => {
+    console.log("Logged out");
+    const { success, data } = await postPutQueryDb("/user/signout", "POST", {
+      signout: true,
+    });
+
+    console.log(data);
+
+    if (success) navigate("/signin");
+  };
+
   return (
     <nav className="hidden md:block">
       <div className="navbar bg-base-100">
@@ -11,7 +24,7 @@ const Navbar = () => {
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">
             <li className="font-heading text-base font-semibold">
-              <Link to={"/health-tracker"}>Health Tracker</Link>
+              <Link to={"/finance-tracker/edit-info"}>Edit Info</Link>
             </li>
             <li className="font-heading text-base font-semibold">
               <Link to="/">Finance Tracker</Link>
@@ -45,7 +58,7 @@ const Navbar = () => {
               <li>
                 <a>Settings</a>
               </li>
-              <li>
+              <li onClick={logoutUser}>
                 <a>Logout</a>
               </li>
             </ul>

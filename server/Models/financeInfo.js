@@ -11,6 +11,10 @@ const FinanceInfoSchema = new Schema({
     required: true,
     default: 0,
   },
+  monthlyExpense: {
+    type: Number,
+    default: 0,
+  },
   userOwner: {
     type: Schema.Types.ObjectId,
     ref: "users",
