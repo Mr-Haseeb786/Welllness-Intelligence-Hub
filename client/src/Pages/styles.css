@@ -1,0 +1,6 @@
+.backGround {
+  background-image: url("/images/cover_2.jpg");
+  object-fit: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

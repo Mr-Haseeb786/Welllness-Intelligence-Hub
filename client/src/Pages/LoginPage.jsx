@@ -2,6 +2,7 @@ import { useSignIn } from "@clerk/clerk-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { postPutQueryDb, cookieTestingFunc } from "../api/queryFuncs";
+import "./styles.css";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ const LoginPage = () => {
 
   return (
     <div className="grid items-center h-screen md:grid-cols-3 font-body">
-      <section className="h-full bg-slate-500 w-full "></section>
+      <header className="h-full bg-slate-500 w-full backGround"></header>
       <section className="md:col-span-2">
         <form
           className="max-w-xs grid gap-4 items-center mx-auto"

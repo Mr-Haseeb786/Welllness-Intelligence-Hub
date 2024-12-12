@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getQueryDb } from "../../api/queryFuncs";
+import Testing from "../Testing";
 
 const HeadInfo = () => {
   const [totalBalance, setTotalBalance] = useState(0);

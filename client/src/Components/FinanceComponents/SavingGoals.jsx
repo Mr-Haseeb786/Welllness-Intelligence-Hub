@@ -114,6 +114,7 @@ const AddSavingGoal = ({ closePop, setRevalidateGoals }) => {
           placeholder="Type here"
           className="input input-bordered w-full max-w-lg"
           name="goalTitle"
+          autoComplete="off"
           onChange={handleChange}
         />
       </label>{" "}

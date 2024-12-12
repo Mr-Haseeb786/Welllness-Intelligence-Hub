@@ -1,3 +1,5 @@
+// controllers for user model or user routes
+
 const { ExpenseModel } = require("../Models/expenses");
 const { FinanceModel } = require("../Models/financeInfo");
 const { SavingsModel } = require("../Models/savings");

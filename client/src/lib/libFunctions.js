@@ -1,3 +1,5 @@
+// file containing library or extra functions
+
 export function validateAccountCreation(user) {
   let errors = {
     email: false,

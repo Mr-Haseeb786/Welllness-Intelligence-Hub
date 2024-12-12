@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getQueryDb, postPutQueryDb } from "../api/queryFuncs";
 
-const Navbar = () => {
+const Navbar = ({ setOpenChatbot }) => {
   const navigate = useNavigate();
   const logoutUser = async () => {
     console.log("Logged out");
@@ -55,8 +55,8 @@ const Navbar = () => {
                   <span className="badge">New</span>
                 </a>
               </li>
-              <li>
-                <a>Settings</a>
+              <li onClick={() => setOpenChatbot(true)}>
+                <a>Open Chatbot</a>
               </li>
               <li onClick={logoutUser}>
                 <a>Logout</a>

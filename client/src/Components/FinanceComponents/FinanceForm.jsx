@@ -63,6 +63,7 @@ const PopupContent = ({
           placeholder="Type here"
           className="input input-bordered w-full max-w-lg"
           name="total-balance"
+          autoComplete="off"
           value={expenseName}
           onChange={onExpenseNameChange}
         />
@@ -172,10 +173,14 @@ const FinanceForm = () => {
     try {
       const resp = await postPutQueryDb("/user/basics", "POST", mainInfoForm);
 
-      console.log(resp);
+      setToastMessage("Data Updated Successfully!");
+      openToast();
+
+      alert("Done");
     } catch (error) {
       console.log("Error: ", error);
     }
+    return;
   };
 
   //  ==============
